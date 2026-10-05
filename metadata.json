@@ -1,0 +1,6 @@
+{
+  "name": "Sahay — Digital Harassment Safety & Evidence Assistant",
+  "description": "Preserve. Protect. Act. A privacy-first, trauma-informed digital harassment safety and evidence preservation prototype for organizing timelines, verifying SHA-256 hashes, scanning privacy risks, creating redacted copies, and preparing structured reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
