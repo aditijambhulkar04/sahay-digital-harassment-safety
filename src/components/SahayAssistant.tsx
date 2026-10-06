@@ -97,7 +97,7 @@ export const SahayAssistant: React.FC = () => {
   };
 
   // Shift button slightly higher when Guided Demo bottom dock is open so it never covers controls
-   const bottomOffsetClass = 'bottom-5';
+   const bottomOffsetClass = 'bottom-6';
   return (
     <div className="no-print">
       {/* Floating Button in Bottom-Right Corner */}
@@ -128,9 +128,7 @@ export const SahayAssistant: React.FC = () => {
           <aside
             role="dialog"
             aria-label={ui.headerTitle}
-            className={`fixed inset-x-0 bottom-0 z-50 h-[82vh] max-h-[82vh] sm:inset-auto sm:right-5 ${
-             'bottom-5'
-            } sm:w-[390px] sm:h-[580px] sm:max-h-[calc(100vh-2.5rem)] bg-white border border-slate-300 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden`}
+            className="fixed inset-x-0 bottom-0 z-50 h-[82vh] max-h-[82vh] sm:inset-auto sm:right-5 sm:bottom-6 sm:w-[390px] sm:h-[580px] sm:max-h-[calc(100vh-3rem)] bg-white border border-slate-300 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="px-4 py-3.5 bg-slate-900 text-white flex items-center justify-between gap-3 shrink-0">
