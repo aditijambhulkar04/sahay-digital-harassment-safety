@@ -7,15 +7,22 @@ import {
   FileText,
   CheckCircle2,
 } from 'lucide-react';
+
 import { useSahay } from '../context/SahayContext';
 import { DEMO_CASE_ID } from '../data/demoData';
 import { useI18n } from '../i18n';
 
+import { en } from '../i18n/en';
+import { hi } from '../i18n/hi';
+import { mr } from '../i18n/mr';
+
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const { settings, updateSettings, setActiveCaseId } = useSahay();
+  const { updateSettings, setActiveCaseId } = useSahay();
   const { lang, setLang } = useI18n();
+
+  const t = lang === 'hi' ? hi : lang === 'mr' ? mr : en;
 
   const handleExploreDemo = () => {
     updateSettings({ demoMode: true });
@@ -48,35 +55,35 @@ export const LandingPage: React.FC = () => {
             href="#preserve"
             className="hover:text-slate-900 transition-colors"
           >
-            Preserve
+            {t.nav.preserve}
           </a>
 
           <a
             href="#protect"
             className="hover:text-slate-900 transition-colors"
           >
-            Protect
+            {t.nav.protect}
           </a>
 
           <a
             href="#act"
             className="hover:text-slate-900 transition-colors"
           >
-            Act
+            {t.nav.act}
           </a>
 
           <Link
             to="/safety"
             className="hover:text-slate-900 transition-colors"
           >
-            Safety Check
+            {t.nav.safetyCheck}
           </Link>
 
           <Link
             to="/complaints"
             className="hover:text-slate-900 transition-colors"
           >
-            Complaint Tracker
+            {t.nav.complaintTracker}
           </Link>
         </nav>
 
@@ -108,7 +115,7 @@ export const LandingPage: React.FC = () => {
             onClick={handleExploreDemo}
             className="hidden sm:inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
           >
-            Explore Demo
+            {t.actions.exploreDemo}
           </button>
 
           {/* Get Started */}
@@ -117,7 +124,7 @@ export const LandingPage: React.FC = () => {
             onClick={handleGetStarted}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
           >
-            Get Started
+            {t.actions.getStarted}
             <ArrowRight size={16} />
           </button>
         </div>
@@ -130,21 +137,19 @@ export const LandingPage: React.FC = () => {
             <div className="max-w-4xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-sm font-medium text-teal-800 mb-6">
                 <Shield size={16} />
-                Digital Safety & Evidence Assistant
+                {t.hero.badge}
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-tight text-slate-900">
-                Sahay — Digital Harassment Safety & Evidence Assistant
+                {t.hero.title}
               </h1>
 
               <p className="mt-6 text-xl sm:text-2xl font-medium text-teal-800">
-                Preserve. Protect. Act.
+                {t.hero.tagline}
               </p>
 
               <p className="mt-5 max-w-2xl text-base sm:text-lg leading-8 text-slate-600">
-                A safety-focused digital assistant designed to help you
-                preserve evidence, understand your options, and take informed
-                next steps when facing online harassment.
+                {t.hero.description}
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -153,7 +158,7 @@ export const LandingPage: React.FC = () => {
                   onClick={handleGetStarted}
                   className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors"
                 >
-                  Get Started
+                  {t.actions.getStarted}
                   <ArrowRight size={17} />
                 </button>
 
@@ -162,7 +167,7 @@ export const LandingPage: React.FC = () => {
                   onClick={handleExploreDemo}
                   className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                 >
-                  Explore Demo
+                  {t.actions.exploreDemo}
                 </button>
               </div>
             </div>
@@ -182,12 +187,11 @@ export const LandingPage: React.FC = () => {
               </div>
 
               <h2 className="text-xl font-semibold text-slate-900">
-                Preserve
+                {t.features.preserve.title}
               </h2>
 
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Organize important screenshots, messages, links, notes, and
-                other relevant information into a structured evidence record.
+                {t.features.preserve.description}
               </p>
             </section>
 
@@ -201,13 +205,11 @@ export const LandingPage: React.FC = () => {
               </div>
 
               <h2 className="text-xl font-semibold text-slate-900">
-                Protect
+                {t.features.protect.title}
               </h2>
 
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Follow practical safety steps to reduce further exposure,
-                protect accounts, and make careful decisions about sharing
-                information.
+                {t.features.protect.description}
               </p>
             </section>
 
@@ -221,13 +223,11 @@ export const LandingPage: React.FC = () => {
               </div>
 
               <h2 className="text-xl font-semibold text-slate-900">
-                Act
+                {t.features.act.title}
               </h2>
 
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Review available next steps, organize your case, and prepare
-                information that may be useful when contacting an appropriate
-                platform, institution, or authority.
+                {t.features.act.description}
               </p>
             </section>
           </div>
@@ -239,17 +239,15 @@ export const LandingPage: React.FC = () => {
             <div className="rounded-3xl border border-slate-200 bg-white p-8 sm:p-10">
               <div className="max-w-3xl">
                 <p className="text-sm font-semibold text-teal-800">
-                  INTERACTIVE DEMO
+                  {t.demo.label}
                 </p>
 
                 <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-                  Explore a sample safety case
+                  {t.demo.title}
                 </h2>
 
                 <p className="mt-4 text-base leading-7 text-slate-600">
-                  See how Sahay can organize a digital harassment case,
-                  preserve evidence, create a timeline, and guide users toward
-                  practical next steps.
+                  {t.demo.description}
                 </p>
 
                 <button
@@ -257,7 +255,7 @@ export const LandingPage: React.FC = () => {
                   onClick={handleExploreDemo}
                   className="mt-7 inline-flex items-center gap-2 rounded-xl bg-teal-800 px-5 py-3 text-sm font-semibold text-white hover:bg-teal-900 transition-colors"
                 >
-                  Explore Demo Case
+                  {t.actions.exploreDemoCase}
                   <ArrowRight size={17} />
                 </button>
               </div>
@@ -270,24 +268,15 @@ export const LandingPage: React.FC = () => {
           <div className="max-w-6xl mx-auto">
             <div className="rounded-2xl border border-slate-200 bg-slate-100 p-7 sm:p-9">
               <h2 className="text-2xl font-semibold text-slate-900">
-                Ethical & Prototype Boundaries
+                {t.ethical.title}
               </h2>
 
               <div className="mt-5 space-y-3 text-sm leading-6 text-slate-600">
-                <p>
-                  Sahay is designed to support safety planning, evidence
-                  organization, and informed decision-making.
-                </p>
+                <p>{t.ethical.paragraph1}</p>
 
-                <p>
-                  It does not replace professional legal advice, emergency
-                  services, law enforcement, or mental-health support.
-                </p>
+                <p>{t.ethical.paragraph2}</p>
 
-                <p>
-                  Users should verify important information and choose actions
-                  that fit their own circumstances and safety needs.
-                </p>
+                <p>{t.ethical.paragraph3}</p>
               </div>
             </div>
           </div>
@@ -299,13 +288,14 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <p className="font-semibold text-slate-900">Sahay</p>
+
             <p className="mt-1 text-sm text-slate-500">
-              Digital Harassment Safety & Evidence Assistant
+              {t.footer.tagline}
             </p>
           </div>
 
           <div className="text-sm text-slate-500">
-            Preserve. Protect. Act.
+            {t.footer.motto}
           </div>
         </div>
       </footer>
