@@ -19,6 +19,7 @@ import { CaseReportsPage } from './pages/CaseReportsPage';
 import { CaseSharingPage } from './pages/CaseSharingPage';
 import { ComplaintsPage } from './pages/ComplaintsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { SahayAssistant } from './components/SahayAssistant';
 
 export default function App() {
   return (
@@ -40,6 +41,9 @@ export default function App() {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+
+
+         <SahayAssistant />
       </BrowserRouter>
     </SahayProvider>
   );

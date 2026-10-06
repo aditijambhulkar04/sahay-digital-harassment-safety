@@ -6,8 +6,7 @@ import { DEMO_CASE_ID } from '../data/demoData';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { updateSettings, setActiveCaseId } = useSahay();
-
+  const { settings, updateSettings, setActiveCaseId } = useSahay();
   const handleExploreDemo = () => {
     updateSettings({ demoMode: true });
     setActiveCaseId(DEMO_CASE_ID);
