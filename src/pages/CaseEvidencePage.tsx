@@ -24,6 +24,8 @@ import {
   validateEvidenceFile,
 } from '../utils/cryptoAndPrivacy';
 
+import { exportRedactedImage, RedactionBox } from '../utils/imageRedaction';
+
 export const CaseEvidencePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const {
@@ -44,6 +46,15 @@ export const CaseEvidencePage: React.FC = () => {
   );
   const [uploadError, setUploadError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+
+const [redactionBoxes, setRedactionBoxes] = useState<RedactionBox[]>([]);
+const [redactionError, setRedactionError] = useState('');
+
+const [redactionX, setRedactionX] = useState('0.1');
+const [redactionY, setRedactionY] = useState('0.1');
+const [redactionWidth, setRedactionWidth] = useState('0.3');
+const [redactionHeight, setRedactionHeight] = useState('0.1');
+
 
   // Verification & OCR UI states
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
@@ -152,6 +163,84 @@ export const CaseEvidencePage: React.FC = () => {
     } finally {
       setIsUploading(false);
       e.target.value = '';
+    }
+  };
+
+ 
+  const handleAddRedactionBox = () => {
+    const x = Number(redactionX);
+    const y = Number(redactionY);
+    const width = Number(redactionWidth);
+    const height = Number(redactionHeight);
+
+    if (
+      ![x, y, width, height].every(Number.isFinite) ||
+      x < 0 ||
+      y < 0 ||
+      width <= 0 ||
+      height <= 0 ||
+      x >= 1 ||
+      y >= 1 ||
+      x + width > 1 ||
+      y + height > 1
+    ) {
+      setRedactionError(
+        'Use values from 0 to 1, and keep the whole rectangle inside the image.'
+      );
+      return;
+    }
+
+    setRedactionBoxes((current) => [
+      ...current,
+      { x, y, width, height },
+    ]);
+    setRedactionError('');
+  };
+
+  const handleExportRedactedImage = async () => {
+    if (!selectedEvidence?.previewDataUrl) {
+      setRedactionError('Select an image first.');
+      return;
+    }
+
+    if (redactionBoxes.length === 0) {
+      setRedactionError('Add at least one redaction area first.');
+      return;
+    }
+
+    try {
+      setRedactionError('');
+
+      const response = await fetch(selectedEvidence.previewDataUrl);
+      const imageBlob = await response.blob();
+      const imageFile = new File(
+        [imageBlob],
+        selectedEvidence.originalFilename,
+        { type: imageBlob.type || 'image/png' }
+      );
+
+      const redactedBlob = await exportRedactedImage(
+        imageFile,
+        redactionBoxes
+      );
+
+      const downloadUrl = URL.createObjectURL(redactedBlob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `redacted-${selectedEvidence.originalFilename.replace(/\\.[^.]+$/, '')}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      // Delay revocation so the browser has time to start the download.
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    } catch (error) {
+      console.error('Redacted image export failed:', error);
+      setRedactionError(
+        error instanceof Error
+          ? `Export failed: ${error.message}`
+          : 'Could not export the redacted image.'
+      );
     }
   };
 
@@ -557,6 +646,105 @@ Comment by @arjun_backup_demo:
                         ))}
                       </div>
                     </div>
+                  )}
+
+                
+                {/* Image Redaction Panel */}
+                {selectedEvidence.evidenceType === 'image' &&
+                  selectedEvidence.previewDataUrl && (
+                    <section className="p-4 border border-slate-200 rounded-xl space-y-4">
+                      <div>
+                        <h3 className="text-sm font-semibold text-slate-900">
+                          Privacy Redaction — Export a Separate Copy
+                        </h3>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Enter rectangle coordinates from 0 to 1. For example, x = 0.1,
+                          y = 0.1, width = 0.3, height = 0.1 covers a small area near the
+                          upper-left corner. The original evidence remains unchanged.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {[
+                          { label: 'X', value: redactionX, setter: setRedactionX },
+                          { label: 'Y', value: redactionY, setter: setRedactionY },
+                          { label: 'Width', value: redactionWidth, setter: setRedactionWidth },
+                          { label: 'Height', value: redactionHeight, setter: setRedactionHeight },
+                        ].map((field) => (
+                          <label key={field.label} className="text-xs text-slate-700">
+                            {field.label} (0–1)
+                            <input
+                              type="number"
+                              min="0"
+                              max="1"
+                              step="0.01"
+                              value={field.value}
+                              onChange={(e) => field.setter(e.target.value)}
+                              className="mt-1 w-full rounded-md border border-slate-300 px-2 py-2"
+                            />
+                          </label>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={handleAddRedactionBox}
+                          className="px-3 py-2 text-xs font-semibold rounded-md bg-slate-100 border border-slate-300 hover:bg-slate-200"
+                        >
+                          Add Redaction Area
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setRedactionBoxes([])}
+                          className="px-3 py-2 text-xs font-semibold rounded-md bg-white border border-slate-300 hover:bg-slate-50"
+                        >
+                          Clear Areas
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleExportRedactedImage}
+                          disabled={redactionBoxes.length === 0}
+                          className="px-3 py-2 text-xs font-semibold text-white rounded-md bg-teal-800 hover:bg-teal-900 disabled:opacity-50"
+                        >
+                          Download Redacted PNG
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-slate-600">
+                        Redaction areas added: {redactionBoxes.length}
+                      </p>
+
+                      {redactionBoxes.length > 0 && (
+                        <ul className="text-xs text-slate-600 list-disc pl-5 space-y-1">
+                          {redactionBoxes.map((box, index) => (
+                            <li key={`${index}-${box.x}-${box.y}`}>
+                              Area {index + 1}: x={box.x}, y={box.y}, width={box.width},
+                              height={box.height}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setRedactionBoxes((current) =>
+                                    current.filter((_, i) => i !== index)
+                                  )
+                                }
+                                className="ml-2 underline text-rose-700"
+                              >
+                                Remove
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {redactionError && (
+                        <p role="alert" className="text-xs text-rose-700">
+                          {redactionError}
+                        </p>
+                      )}
+                    </section>
                   )}
 
                 {/* Browser / Local OCR Section (For Images) */}

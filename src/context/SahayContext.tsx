@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { addLedgerEntry } from '../services/evidenceLedger';
 import {
   DEMO_CASE_ID,
   INITIAL_DEMO_AUDIT_LOGS,
@@ -312,6 +313,11 @@ export const SahayProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       verificationStatus: 'verified',
     };
     setEvidence((prev) => [newItem, ...prev]);
+    void addLedgerEntry(
+      'Evidence Uploaded',
+      newItem.id,
+      `Filename: ${newItem.originalFilename}; SHA-256: ${newItem.sha256Hash}; bytes: ${newItem.sizeBytes}`
+    ).catch((error) => console.error('Could not record evidence upload in custody ledger:', error));
     logAuditEvent(
       'Evidence Preserved & Hashed',
       `Original file "${newItem.originalFilename}" preserved with SHA-256 ${newItem.sha256Hash.slice(0, 16)}...`,
@@ -327,28 +333,51 @@ export const SahayProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!item) {
       return { matches: false, computedHash: '', storedHash: '' };
     }
-    // For demo items with precomputed canonical hashes, or user-uploaded items whose hash was computed from contentText/previewDataUrl
-    let computedHash = item.sha256Hash;
-    if (!item.id.startsWith('ev-demo-')) {
-      const sourcePayload = item.previewDataUrl || item.contentText || item.originalFilename;
-      computedHash = await computeSHA256(sourcePayload);
+    let computedHash = '';
+    let canVerify = true;
+    try {
+      if (item.previewDataUrl?.startsWith('data:')) {
+        // Decode the original image data URL back to the original bytes before hashing.
+        const encoded = item.previewDataUrl.split(',')[1] || '';
+        const binary = atob(encoded);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        computedHash = await computeSHA256(bytes.buffer);
+      } else if (item.contentText && new TextEncoder().encode(item.contentText).byteLength === item.sizeBytes) {
+        computedHash = await computeSHA256(item.contentText);
+      } else if (item.id.startsWith('ev-demo-')) {
+        computedHash = item.sha256Hash;
+      } else {
+        canVerify = false;
+      }
+    } catch {
+      canVerify = false;
     }
-    const matches = computedHash === item.sha256Hash;
+    const matches = canVerify && computedHash === item.sha256Hash;
     const now = new Date().toISOString();
     setEvidence((prev) =>
       prev.map((e) =>
         e.id === evidenceId
-          ? { ...e, lastVerifiedAt: now, verificationStatus: 'verified' }
+          ? { ...e, lastVerifiedAt: now, verificationStatus: matches ? 'verified' : 'pending' }
           : e
       )
     );
     logAuditEvent(
       'Integrity Verification Run',
-      `Verified SHA-256 fingerprint for "${item.originalFilename}": ${
-        matches ? 'MATCH (Original unmodified)' : 'MISMATCH'
+      `SHA-256 verification for "${item.originalFilename}": ${
+        !canVerify ? 'UNAVAILABLE (original bytes are not retained for this file type/size)' : matches ? 'MATCH' : 'MISMATCH'
       }.`,
       item.caseId
     );
+    void addLedgerEntry(
+  'Integrity Verification Run',
+  item.id,
+  `Evidence: ${item.originalFilename}; result: ${
+    !canVerify ? 'UNAVAILABLE' : matches ? 'MATCH' : 'MISMATCH'
+  }; computed SHA-256: ${computedHash || 'not available'}; stored SHA-256: ${item.sha256Hash}`,
+).catch((error) => {
+  console.error('Failed to record integrity ledger entry:', error);
+});
     return { matches, computedHash, storedHash: item.sha256Hash };
   };
 

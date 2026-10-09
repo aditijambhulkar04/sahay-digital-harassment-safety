@@ -25,6 +25,9 @@ interface RectBox {
 }
 
 export const CasePrivacyPage: React.FC = () => {
+  const handleQuickExit = () => {
+  window.location.replace('https://www.google.com/');
+};
   const { id } = useParams<{ id: string }>();
   const {
     cases,
@@ -314,6 +317,15 @@ export const CasePrivacyPage: React.FC = () => {
       ]}
     >
       <CaseSubNav caseId={caseId} />
+      <div className="flex justify-end">
+  <button
+    type="button"
+    onClick={handleQuickExit}
+    className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700"
+  >
+    Quick Exit
+  </button>
+</div>
 
       <div className="space-y-8">
         {/* Top Overview Banner */}

@@ -1,4 +1,6 @@
-import { SupportedLanguage } from '../i18n';
+import { Language } from '../i18n';
+
+
 
 export type AssistantTopicKey =
   | 'greeting'
@@ -23,7 +25,7 @@ export type AssistantTopicKey =
 
 export interface SahayAssistantRequest {
   userMessage: string;
-  language: SupportedLanguage;
+  language: Language;
   currentPathname: string;
 }
 
@@ -47,7 +49,7 @@ export interface AssistantUITranslations {
   typingIndicator: string;
 }
 
-export const ASSISTANT_UI_TEXT: Record<SupportedLanguage, AssistantUITranslations> = {
+export const ASSISTANT_UI_TEXT: Record<Language, AssistantUITranslations> = {
   en: {
     buttonLabel: 'Sahay Assistant',
     headerTitle: 'Sahay Assistant',
@@ -128,10 +130,10 @@ export function getRouteKey(pathname: string): string {
   return 'landing';
 }
 
-export function getPageContextBanner(pathname: string, lang: SupportedLanguage): string {
+export function getPageContextBanner(pathname: string, lang: Language): string {
   const key = getRouteKey(pathname);
 
-  const banners: Record<SupportedLanguage, Record<string, string>> = {
+  const banners: Record<Language, Record<string, string>> = {
     en: {
       evidence:
         "You're currently viewing your evidence. I can explain how evidence checking works.",
@@ -479,7 +481,7 @@ export function classifyAssistantTopic(message: string): AssistantTopicKey {
 export function buildLocalizedReply(
   topicKey: AssistantTopicKey,
   routeKey: string,
-  lang: SupportedLanguage
+  lang: Language
 ): string {
   if (lang === 'hi') {
     return buildHindiReply(topicKey, routeKey);
