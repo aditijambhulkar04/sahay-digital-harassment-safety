@@ -1,40 +1,14 @@
 import { EvidenceItem, PrivacyFinding, PrivacyFindingType } from '../types/sahay';
 
-/**
- * Computes a deterministic SHA-256 hex digest using Web Crypto API,
- * with a pure TypeScript fallback if subtle crypto is unavailable.
- */
+/** Computes a real SHA-256 digest using Web Crypto. Never label a weak fallback as SHA-256. */
 export async function computeSHA256(input: string | ArrayBuffer): Promise<string> {
-  try {
-    if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
-      const buffer =
-        typeof input === 'string' ? new TextEncoder().encode(input) : input;
-      const hashBuffer = await window.crypto.subtle.digest('SHA-256', buffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-    }
-  } catch {
-    // Fall through to deterministic fallback
+  if (!globalThis.crypto?.subtle) {
+    throw new Error('Secure SHA-256 is unavailable in this browser context.');
   }
-
-  // Deterministic fallback hash (64-char hex)
-  const str =
-    typeof input === 'string'
-      ? input
-      : new TextDecoder().decode(new Uint8Array(input));
-  let h1 = 0xdeadbeef ^ str.length;
-  let h2 = 0x41c6ce57 ^ str.length;
-  for (let i = 0; i < str.length; i++) {
-    const ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-  }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  const baseHex =
-    (h1 >>> 0).toString(16).padStart(8, '0') +
-    (h2 >>> 0).toString(16).padStart(8, '0');
-  return baseHex.repeat(4);
+  const buffer = typeof input === 'string' ? new TextEncoder().encode(input) : input;
+  const hashBuffer = await globalThis.crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -435,4 +409,75 @@ export function validateEvidenceFile(file: File): { valid: boolean; reason?: str
     };
   }
   return { valid: true };
+}
+/**
+ * AES-GCM encryption utilities for sensitive evidence data.
+ * Keep the CryptoKey in memory; do not store it alongside ciphertext.
+ */
+
+export async function generateVaultKey(): Promise<CryptoKey> {
+  if (!globalThis.crypto?.subtle) {
+    throw new Error('Secure browser encryption is unavailable.');
+  }
+
+  return globalThis.crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt'],
+  );
+}
+
+export interface EncryptedPayload {
+  iv: string;
+  ciphertext: string;
+  algorithm: 'AES-GCM';
+}
+
+export async function encryptVaultText(
+  plaintext: string,
+  key: CryptoKey,
+): Promise<EncryptedPayload> {
+  if (!globalThis.crypto?.subtle) {
+    throw new Error('Secure browser encryption is unavailable.');
+  }
+
+  const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await globalThis.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    new TextEncoder().encode(plaintext),
+  );
+
+  const toBase64 = (bytes: Uint8Array) =>
+    btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''));
+
+  return {
+    iv: toBase64(iv),
+    ciphertext: toBase64(new Uint8Array(encrypted)),
+    algorithm: 'AES-GCM',
+  };
+}
+
+export async function decryptVaultText(
+  payload: EncryptedPayload,
+  key: CryptoKey,
+): Promise<string> {
+  if (!globalThis.crypto?.subtle) {
+    throw new Error('Secure browser encryption is unavailable.');
+  }
+
+  if (payload.algorithm !== 'AES-GCM') {
+    throw new Error('Unsupported encryption algorithm.');
+  }
+
+  const fromBase64 = (value: string) =>
+    Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
+
+  const decrypted = await globalThis.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: fromBase64(payload.iv) },
+    key,
+    fromBase64(payload.ciphertext),
+  );
+
+  return new TextDecoder().decode(decrypted);
 }
